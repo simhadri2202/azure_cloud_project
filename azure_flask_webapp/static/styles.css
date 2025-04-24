@@ -7,17 +7,25 @@
 }
 
 body {
-    background-color: #f4f7fc;
+    background: linear-gradient(135deg, #c3ecf7, #a0c4ff, #bdb2ff);
+    background-size: 400% 400%;
+    animation: gradientBG 15s ease infinite;
     display: flex;
     justify-content: center;
     align-items: center;
     height: 100vh;
 }
 
+@keyframes gradientBG {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
 .container {
-    background-color: #fff;
+    background-color: rgba(255, 255, 255, 0.95);
     border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     padding: 30px;
     width: 100%;
     max-width: 400px;
@@ -79,7 +87,7 @@ input:focus {
     .container {
         padding: 20px;
     }
-    
+
     input[type="text"],
     input[type="email"],
     input[type="password"],
