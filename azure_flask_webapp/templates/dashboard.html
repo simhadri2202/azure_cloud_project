@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Retail Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <header>
+        <h1>Retail Dashboard</h1>
+        <form action="/dashboard" method="POST">
+            <label for="filter_by">Filter By:</label>
+            <select name="filter_by" id="filter_by">
+                <option value="Household_size">Household Size</option>
+                <option value="Income">Income</option>
+                <option value="Product_Category">Product Category</option>
+            </select>
+            
+            <label for="filter_value">Value:</label>
+            <input type="text" name="filter_value" id="filter_value" placeholder="Enter value to filter">
+            
+            <button type="submit">Apply Filter</button>
+        </form>
+    </header>
+
+    <main>
+        <div class="dashboard">
+            <!-- Line Chart for Engagement Over Time -->
+            <canvas id="engagementChart"></canvas>
+
+            <!-- Bar Chart for Product Categories -->
+            <canvas id="productCategoriesChart"></canvas>
+
+            <!-- Table for Customer Data -->
+            <table>
+                <thead>
+                    <tr>
+                        <th>HSHD_NUM</th>
+                        <th>Basket_num</th>
+                        <th>Date</th>
+                        <th>Product_num</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in data %}
+                    <tr>
+                        <td>{{ row.HSHD_NUM }}</td>
+                        <td>{{ row.Basket_num }}</td>
+                        <td>{{ row.Date }}</td>
+                        <td>{{ row.Product_num }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </main>
+    <script>
+        // Create Chart.js visualizations
+        const engagementChart = new Chart(document.getElementById('engagementChart'), {
+            type: 'line',
+            data: {
+                labels: ['January', 'February', 'March', 'April'],
+                datasets: [{
+                    label: 'Customer Engagement Over Time',
+                    data: [10, 12, 15, 18],
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    fill: false
+                }]
+            }
+        });
+
+        const productCategoriesChart = new Chart(document.getElementById('productCategoriesChart'), {
+            type: 'bar',
+            data: {
+                labels: ['Electronics', 'Groceries', 'Clothing'],
+                datasets: [{
+                    label: 'Product Categories',
+                    data: [40, 80, 55],
+                    backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                    borderColor: 'rgba(255, 99, 132, 1)',
+                    borderWidth: 1
+                }]
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles.css') }}">
+    <title>Upload New Data</title>
+</head>
+<body>
+    <h1>Upload Latest Transactions, Households, and Products Data</h1>
+
+    <!-- Form to upload CSV files -->
+    <form action="/upload" method="POST" enctype="multipart/form-data">
+        <label for="transactions">Upload Transactions Data (CSV):</label>
+        <input type="file" id="transactions" name="transactions" accept=".csv" required><br><br>
+
+        <label for="households">Upload Households Data (CSV):</label>
+        <input type="file" id="households" name="households" accept=".csv" required><br><br>
+
+        <label for="products">Upload Products Data (CSV):</label>
+        <input type="file" id="products" name="products" accept=".csv" required><br><br>
+
+        <button type="submit">Upload Data</button>
+    </form>
+
+</body>
+</html>

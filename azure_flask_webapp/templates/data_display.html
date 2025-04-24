@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Display for HSHD_NUM 10</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border: 1px solid #ddd;
+        }
+        th {
+            background-color: #f4f4f4;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Data Pull for Household Number: 10</h1>
+
+    <table>
+        <thead>
+            <tr>
+                <th>HSHD_NUM</th>
+                <th>Basket_num</th>
+                <th>Date</th>
+                <th>Product_num</th>
+                <th>Department</th>
+                <th>Commodity</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in data %}
+                <tr>
+                    <td>{{ row.HSHD_NUM }}</td>
+                    <td>{{ row.Basket_num }}</td>
+                    <td>{{ row.Date }}</td>
+                    <td>{{ row.Product_num }}</td>
+                    <td>{{ row.Department }}</td>
+                    <td>{{ row.Commodity }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>
