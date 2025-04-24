@@ -6,6 +6,7 @@ from sqlalchemy import text
 # Load environment variables from .env file
 load_dotenv()
 
+
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = (
     f"postgresql://{os.getenv('DB_USER')}:{os.getenv('DB_PASS')}@"
