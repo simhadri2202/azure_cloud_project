@@ -32,17 +32,16 @@ class User(db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False)
     password = db.Column(db.String(200), nullable=False)
 
-# Home route to test DB connection
 @app.route('/')
-def index():
-    return render_template('register.html')
+def home():
+    # Renders the registration form on the homepage
+    return render_template('login.html')
 
-# Route to show the registration form
-@app.route('/register', methods=['GET'])
-def show_register_form():
-    return render_template('register.html')
 
-# Route to handle form submission and save user to DB
+@app.route('/dashboard')
+def dashboard():
+    return "Welcome to the dashboard!"
+
 @app.route('/register', methods=['POST'])
 def register():
     username = request.form['username']
@@ -51,8 +50,6 @@ def register():
     email = request.form['email']
     password = request.form['password']
 
-    # Hash the password before saving
-    # hashed_password = generate_password_hash(password)
 
     # Create a new user instance
     new_user = User(
@@ -61,7 +58,6 @@ def register():
         last_name=lastname,
         email=email,
         password=password
-        #password=hashed_password
     )
 
     # Add and commit the user to the database
@@ -82,6 +78,21 @@ def success():
 
 @app.route('/login')
 def signin():
+    return render_template('login.html')
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        # Get the credentials from the form
+        username = request.form['username']
+        password = request.form['password']
+
+        # Query the database for the user
+        user = User.query.filter_by(username=username).first()
+
+        if user and user.password == password:  # Compare passwords (ensure hashing in production)
+            return redirect(url_for('dashboard'))
+        else:
+            return "Invalid credentials, please try again."
     return render_template('login.html')
 
 # Run the app
