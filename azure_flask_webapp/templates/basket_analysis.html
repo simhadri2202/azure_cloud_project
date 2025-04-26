@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Basket Analysis - Cross-Selling</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script> <!-- Plotly -->
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .nav a {
+            margin-right: 15px;
+            text-decoration: none;
+            padding: 8px 12px;
+            background-color: #0077cc;
+            color: white;
+            border-radius: 5px;
+        }
+        .nav a:hover {
+            background-color: #005fa3;
+        }
+        table {
+            width: 100%;
+            margin-top: 20px;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 10px;
+            border: 1px solid #ccc;
+            text-align: center;
+        }
+        th {
+            background-color: #0077cc;
+            color: white;
+        }
+        #network-graph {
+            margin-top: 40px;
+            width: 100%;
+            height: 600px;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Navigation -->
+<div class="nav">
+    <a href="/">Home</a>
+    <a href="/dashboard">Dashboard</a>
+    <a href="/upload">Upload</a>
+    <a href="/logout">Logout</a>
+</div>
+
+<h1>Basket Analysis - Top Product Combinations</h1>
+
+<!-- Table -->
+<table>
+    <tr>
+        <th>Product 1</th>
+        <th>Product 2</th>
+        <th>Times Bought Together</th>
+    </tr>
+    {% for _, row in pairs.iterrows() %}
+    <tr>
+        <td>{{ row['product_1_name'] }}</td>
+        <td>{{ row['product_2_name'] }}</td>
+        <td>{{ row['count'] }}</td>
+    </tr>
+    {% endfor %}
+</table>
+
+<!-- Network Graph -->
+<div id="network-graph"></div>
+
+<script>
+    // Prepare nodes and edges
+    var nodes = new Set();
+    var edges = [];
+
+    {% for _, row in pairs.iterrows() %}
+        nodes.add("{{ row['product_1_name'] }}");
+        nodes.add("{{ row['product_2_name'] }}");
+        edges.push({
+            source: "{{ row['product_1_name'] }}",
+            target: "{{ row['product_2_name'] }}",
+            value: {{ row['count'] }}
+        });
+    {% endfor %}
+
+    nodes = Array.from(nodes);
+
+    var data = [];
+
+    // Nodes
+    data.push({
+        type: "scatter",
+        mode: "markers+text",
+        x: Array.from({length: nodes.length}, () => Math.random()),
+        y: Array.from({length: nodes.length}, () => Math.random()),
+        text: nodes,
+        marker: { size: 20 },
+        textposition: "top center",
+        hoverinfo: "text"
+    });
+
+    // Edges
+    edges.forEach(function(edge) {
+        var source_idx = nodes.indexOf(edge.source);
+        var target_idx = nodes.indexOf(edge.target);
+
+        data.push({
+            type: "scatter",
+            mode: "lines",
+            x: [Math.random(), Math.random()],
+            y: [Math.random(), Math.random()],
+            line: {
+                width: Math.sqrt(edge.value),
+                color: "#0077cc"
+            },
+            hoverinfo: "none"
+        });
+    });
+
+    var layout = {
+        title: 'Product Co-Purchase Network',
+        showlegend: false,
+        xaxis: {showticklabels: false, zeroline: false},
+        yaxis: {showticklabels: false, zeroline: false}
+    };
+
+    Plotly.newPlot('network-graph', data, layout);
+</script>
+
+</body>
+</html>
