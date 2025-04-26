@@ -1,66 +1,143 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
     <title>Upload Datasets</title>
     <style>
-        body { font-family: Arial, sans-serif; padding: 20px; }
-        input, button {
-            padding: 10px;
-            margin: 10px 0;
+        /* General Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Arial', sans-serif;
         }
+        body {
+            background: linear-gradient(135deg, #89f7fe, #66a6ff);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px 20px;
+        }
+        /* Navigation Bar */
         .nav {
-            margin-bottom: 20px;
+            display: flex;
+            gap: 15px;
+            margin-bottom: 40px;
         }
         .nav a {
-            margin-right: 15px;
             text-decoration: none;
-            padding: 8px 12px;
             background-color: #0077cc;
             color: white;
-            border-radius: 5px;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-weight: bold;
+            transition: background-color 0.3s ease;
         }
         .nav a:hover {
             background-color: #005fa3;
         }
-        .message {
-            color: green;
+
+        /* Main Container */
+        .upload-container {
+            background: #ffffff;
+            padding: 40px 30px;
+            border-radius: 12px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+            width: 100%;
+            max-width: 500px;
+            text-align: center;
+        }
+        .upload-container h2 {
+            margin-bottom: 25px;
+            color: #333333;
+        }
+
+        /* Form Styles */
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        label {
             font-weight: bold;
+            color: #555555;
+            margin-bottom: 5px;
+            text-align: left;
+        }
+        input[type="file"] {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            background: #f9f9f9;
+        }
+        button[type="submit"] {
+            padding: 12px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        button[type="submit"]:hover {
+            background-color: #45a049;
+        }
+
+        /* Flash Messages */
+        .message {
+            margin-top: 20px;
+            color: #28a745;
+            font-weight: bold;
+        }
+        ul {
+            list-style: none;
         }
     </style>
 </head>
 <body>
     <!-- Navigation Bar -->
     <div class="nav">
-        <a href="/search">Go Back</a>  <!-- Go Back button here -->
+        <a href="/search">Go Back</a>
         <a href="/search">Search Data</a>
         <a href="/logout">Logout</a>
     </div>
 
-    <h2>Upload Latest Datasets</h2>
+    <!-- Main Upload Section -->
+    <div class="upload-container">
+        <h2>Upload Latest Datasets</h2>
 
-    <!-- Flash success message display -->
-    {% with messages = get_flashed_messages() %}
-      {% if messages %}
-        <ul>
-        {% for message in messages %}
-          <li class="message">{{ message }}</li>
-        {% endfor %}
-        </ul>
-      {% endif %}
-    {% endwith %}
+        <!-- Flash success message display -->
+        {% with messages = get_flashed_messages() %}
+          {% if messages %}
+            <ul>
+            {% for message in messages %}
+              <li class="message">{{ message }}</li>
+            {% endfor %}
+            </ul>
+          {% endif %}
+        {% endwith %}
 
-    <form action="/upload" method="POST" enctype="multipart/form-data">
-        <label>Households CSV:</label><br>
-        <input type="file" name="households"><br><br>
+        <form action="/upload" method="POST" enctype="multipart/form-data">
+            <div>
+                <label>Households CSV</label>
+                <input type="file" name="households" required>
+            </div>
 
-        <label>Products CSV:</label><br>
-        <input type="file" name="products"><br><br>
+            <div>
+                <label>Products CSV</label>
+                <input type="file" name="products" required>
+            </div>
 
-        <label>Transactions CSV:</label><br>
-        <input type="file" name="transactions"><br><br>
+            <div>
+                <label>Transactions CSV</label>
+                <input type="file" name="transactions" required>
+            </div>
 
-        <button type="submit">Upload and Load</button>
-    </form>
+            <button type="submit">Upload and Load</button>
+        </form>
+    </div>
 
 </body>
 </html>
