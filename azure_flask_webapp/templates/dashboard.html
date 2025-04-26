@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Retail Insights Dashboard</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+        .nav {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .nav a {
+            margin: 0 10px;
+            text-decoration: none;
+            padding: 10px 20px;
+            background-color: #0077cc;
+            color: white;
+            border-radius: 5px;
+        }
+        .nav a:hover {
+            background-color: #005fa3;
+        }
+        h1 {
+            text-align: center;
+            color: #0077cc;
+        }
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 20px;
+        }
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+        th {
+            background-color: #0077cc;
+            color: white;
+        }
+        /* Spinner Styles */
+        #loading {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            background: rgba(255,255,255,0.8);
+            z-index: 9999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .spinner {
+            border: 10px solid #f3f3f3;
+            border-top: 10px solid #0077cc;
+            border-radius: 50%;
+            width: 80px;
+            height: 80px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+
+<body>
+
+<!-- Loading Spinner -->
+<div id="loading">
+    <div class="spinner"></div>
+</div>
+
+<!-- Navigation Bar -->
+<div class="nav">
+    <a href="/">Home</a>
+    <a href="/search">Search Data</a>
+    <a href="/upload">Upload Data</a>
+    <a href="/basket-analysis">Basket Analysis</a>
+    <a href="/logout">Logout</a>
+</div>
+
+<h1>Retail Insights Dashboard</h1>
+
+<div class="grid-container">
+    <!-- Demographics Card -->
+    <div class="card">
+        <h2>Demographics and Engagement</h2>
+        <table>
+            <tr><th>Household Size</th><th>Children</th><th>Avg Spend</th></tr>
+            {% for row in demographic_data %}
+            <tr>
+                <td>{{ row.household_size }}</td>
+                <td>{{ row.children }}</td>
+                <td>${{ "%.2f"|format(row.avg_spend) }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+
+    <!-- Engagement Over Time Table -->
+    <div class="card">
+        <h2>Engagement Over Time</h2>
+        <table>
+            <tr><th>Year</th><th>Total Spend</th></tr>
+            {% for row in engagement_data %}
+            <tr>
+                <td>{{ row.year }}</td>
+                <td>${{ "%.2f"|format(row.total_spend) }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+
+    <!-- Brand Preferences Table -->
+    <div class="card">
+        <h2>Brand Preferences</h2>
+        <table>
+            <tr><th>Brand Type</th><th>Total Spend</th></tr>
+            {% for row in brand_data %}
+            <tr>
+                <td>{{ row.brand_type }}</td>
+                <td>${{ "%.2f"|format(row.total_spend) }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+
+    <!-- Spend Per Year Chart -->
+    <div class="card">
+        <h2>Spend Per Year (Bar Chart)</h2>
+        <div id="engagement_bar" style="height:300px;"></div>
+    </div>
+
+    <!-- Brand Preferences Pie Chart -->
+    <div class="card">
+        <h2>Brand Preferences (Pie Chart)</h2>
+        <div id="brand_pie" style="height:300px;"></div>
+    </div>
+
+</div>
+
+<!-- Hide Spinner after page fully loads -->
+<script>
+    window.onload = function() {
+        document.getElementById("loading").style.display = "none";
+    };
+</script>
+
+<!-- Plotly Charts -->
+<script>
+    var engagementData = {
+        x: {{ engagement_data|map(attribute='year')|list|tojson }},
+        y: {{ engagement_data|map(attribute='total_spend')|list|tojson }},
+        type: 'bar',
+        marker: { color: '#0077cc' }
+    };
+    var barLayout = {
+        margin: { t: 30 },
+        xaxis: { title: 'Year' },
+        yaxis: { title: 'Total Spend ($)' }
+    };
+    Plotly.newPlot('engagement_bar', [engagementData], barLayout);
+
+    var brandData = {
+        labels: {{ brand_data|map(attribute='brand_type')|list|tojson }},
+        values: {{ brand_data|map(attribute='total_spend')|list|tojson }},
+        type: 'pie'
+    };
+    var pieLayout = {
+        margin: { t: 30 },
+    };
+    Plotly.newPlot('brand_pie', [brandData], pieLayout);
+</script>
+
+</body>
+</html>

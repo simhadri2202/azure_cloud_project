@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Upload Datasets</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        input, button {
+            padding: 10px;
+            margin: 10px 0;
+        }
+        .nav {
+            margin-bottom: 20px;
+        }
+        .nav a {
+            margin-right: 15px;
+            text-decoration: none;
+            padding: 8px 12px;
+            background-color: #0077cc;
+            color: white;
+            border-radius: 5px;
+        }
+        .nav a:hover {
+            background-color: #005fa3;
+        }
+        .message {
+            color: green;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <div class="nav">
+        <a href="/search">Go Back</a>  <!-- Go Back button here -->
+        <a href="/search">Search Data</a>
+        <a href="/logout">Logout</a>
+    </div>
+
+    <h2>Upload Latest Datasets</h2>
+
+    <!-- Flash success message display -->
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <ul>
+        {% for message in messages %}
+          <li class="message">{{ message }}</li>
+        {% endfor %}
+        </ul>
+      {% endif %}
+    {% endwith %}
+
+    <form action="/upload" method="POST" enctype="multipart/form-data">
+        <label>Households CSV:</label><br>
+        <input type="file" name="households"><br><br>
+
+        <label>Products CSV:</label><br>
+        <input type="file" name="products"><br><br>
+
+        <label>Transactions CSV:</label><br>
+        <input type="file" name="transactions"><br><br>
+
+        <button type="submit">Upload and Load</button>
+    </form>
+
+</body>
+</html>
