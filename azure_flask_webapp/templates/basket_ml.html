@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Basket ML Analysis</title>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f1f3f6;
+            color: #333;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #0077cc;
+        }
+        .nav {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .nav a {
+            background-color: #0077cc;
+            color: white;
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: bold;
+            transition: background 0.3s;
+        }
+        .nav a:hover {
+            background-color: #005fa3;
+        }
+        table {
+            width: 90%;
+            margin: auto;
+            border-collapse: collapse;
+            background: #fff;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        th, td {
+            padding: 15px;
+            text-align: center;
+            border-bottom: 1px solid #eee;
+        }
+        th {
+            background-color: #0077cc;
+            color: white;
+            font-size: 1.1em;
+        }
+        tr:hover {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+
+<div class="nav">
+    <a href="/dashboard">← Back to Dashboard</a>
+</div>
+
+<h1>Basket Analysis (Linear Regression)</h1>
+
+<table>
+    <thead>
+        <tr>
+            <th>Basket Number</th>
+            <th>Products in Basket</th>
+            <th>Recommended Department</th>
+            <th>Recommended Commodity</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for row in results.itertuples() %}
+        <tr>
+            <td>{{ row._1 }}</td>
+            <td>{{ row._2 }}</td>
+            <td>{{ row.department }}</td>
+            <td>{{ row.commodity }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+</body>
+</html>

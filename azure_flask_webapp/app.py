@@ -5,8 +5,7 @@ from dotenv import load_dotenv
 from sqlalchemy import text
 from io import StringIO
 import pandas as pd
-from mlxtend.preprocessing import TransactionEncoder
-from mlxtend.frequent_patterns import apriori, association_rules
+from sklearn.linear_model import LinearRegression, LogisticRegression
 # Load environment variables from .env file
 load_dotenv()
 
@@ -48,19 +47,21 @@ def home():
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+    error = None  # Track error messages
+
     if request.method == 'POST':
-        # Get the credentials from the form
         username = request.form['username']
         password = request.form['password']
 
-        # Query the database for the user
         user = User.query.filter_by(username=username).first()
 
-        if user and user.password == password:  # Compare passwords (ensure hashing in production)
+        if user and user.password == password:
             return render_template('search.html')
         else:
-            return "Invalid credentials, please try again."
-    return render_template('login.html')
+            error = "Invalid credentials. Please try again."
+
+    return render_template('login.html', error=error)
+
 
 @app.route('/logout')
 def logout():
@@ -189,65 +190,139 @@ def dashboard():
     """
     brand_data = db.session.execute(text(brand_query)).fetchall()
 
+    # ✅ Now ADD: Seasonal Trends
+    seasonal_query = """
+        SELECT WEEK_NUM, YEAR, SPEND
+        FROM transactions
+        WHERE SPEND IS NOT NULL;
+    """
+    seasonal_result = db.session.execute(text(seasonal_query)).fetchall()
+
+    import pandas as pd
+    seasonal_df = pd.DataFrame(seasonal_result, columns=["WEEK_NUM", "YEAR", "SPEND"])
+
+    # Group and sum SPEND
+    seasonal_grouped = seasonal_df.groupby(['YEAR', 'WEEK_NUM'])['SPEND'].sum().reset_index()
+    seasonal_grouped = seasonal_grouped.sort_values(by=['YEAR', 'WEEK_NUM'])
+
+    # Prepare seasonal trends dictionary for frontend
+    years = sorted(seasonal_grouped['YEAR'].unique())
+    seasonal_data = {}
+
+    for year in years:
+        year_data = seasonal_grouped[seasonal_grouped['YEAR'] == year]
+        seasonal_data[year] = {
+            "weeks": list(year_data['WEEK_NUM']),
+            "spends": list(year_data['SPEND'])
+        }
+
     return render_template('dashboard.html',
                            demographic_data=demographic_data,
                            engagement_data=engagement_data,
-                           brand_data=brand_data)
-@app.route('/basket-analysis')
-def basket_analysis():
-    import pandas as pd
-    from collections import Counter
-    from itertools import combinations
-    from sqlalchemy import text
+                           brand_data=brand_data,
+                           seasonal_data=seasonal_data)
 
-    # Step 1: Pull basket and product data
-    basket_query = """
+@app.route('/basket-ml')
+def basket_ml():
+    # Step 1: Load transactions
+    transactions_query = """
         SELECT basket_num, product_num
         FROM transactions
-        ORDER BY basket_num;
+        LIMIT 5000;
     """
-    data = db.session.execute(text(basket_query)).fetchall()
+    transactions_result = db.session.execute(text(transactions_query)).fetchall()
+    transactions = pd.DataFrame(transactions_result, columns=["basket_num", "product_num"])
 
-    df = pd.DataFrame(data, columns=["basket_num", "product_num"])
-
-    # Step 2: Pull product information (PRODUCT_NUM, COMMODITY)
-    product_query = """
-        SELECT product_num, commodity
+    # Step 2: Load products
+    products_query = """
+        SELECT product_num, department, commodity
         FROM products;
     """
-    products_data = db.session.execute(text(product_query)).fetchall()
+    products_result = db.session.execute(text(products_query)).fetchall()
+    products = pd.DataFrame(products_result, columns=["product_num", "department", "commodity"])
 
-    df_products = pd.DataFrame(products_data, columns=["product_num", "commodity"])
+    # Step 3: Create basket-product matrix
+    basket = transactions.groupby(['basket_num', 'product_num']).size().unstack(fill_value=0)
+    basket = basket.applymap(lambda x: 1 if x > 0 else 0)
 
-    # Step 3: Group products per basket
-    basket_groups = df.groupby('basket_num')['product_num'].apply(list)
+    if basket.shape[1] < 2:
+        return "Not enough product combinations for ML analysis."
 
-    # Step 4: Count co-occurring product pairs
-    pair_counter = Counter()
-    for products in basket_groups:
-        if len(products) > 1:
-            for pair in combinations(sorted(products), 2):
-                pair_counter[pair] += 1
+    # Step 4: Prepare X and y
+    X = basket.copy()
+    y = basket.columns.tolist()  # list of all products
 
-    # Step 5: Convert Counter to DataFrame
-    pair_df = pd.DataFrame(pair_counter.items(), columns=['product_pair', 'count'])
+    # Step 5: Fake target for each basket
+    import random
+    y_target = random.choices(y, k=len(X))
 
-    # Step 6: Map product_num to commodity (names)
-    def get_commodity(product_num):
-        row = df_products[df_products['product_num'] == product_num]
-        if not row.empty:
-            return row.iloc[0]['commodity']
-        else:
-            return str(product_num)  # fallback to number if not found
+    # Step 6: Train Linear Regression
+    from sklearn.linear_model import LinearRegression
+    model = LinearRegression()
+    model.fit(X, y_target)
 
-    # Step 7: Apply mapping to product pairs
-    pair_df['product_1_name'] = pair_df['product_pair'].apply(lambda x: get_commodity(x[0]))
-    pair_df['product_2_name'] = pair_df['product_pair'].apply(lambda x: get_commodity(x[1]))
+    # Step 7: Predict "next likely product number"
+    predictions = model.predict(X)
+    predicted_products = [int(round(p)) for p in predictions]
 
-    # Step 8: Take Top 10 most frequent
-    top_pairs = pair_df.sort_values(by='count', ascending=False).head(10)
+    # Step 8: Map predicted product_num ➔ product details
+    recommended_products = products[products['product_num'].isin(predicted_products)]
 
-    return render_template('basket_analysis.html', pairs=top_pairs)
+    # Step 9: For each basket, also list current products
+    basket_product_map = {}
+
+    for basket_id in basket.index:
+        current_products = transactions[transactions['basket_num'] == basket_id]['product_num'].tolist()
+        product_names = products[products['product_num'].isin(current_products)][['department', 'commodity']]
+        readable_names = product_names.apply(lambda row: f"{row['department']} - {row['commodity']}", axis=1)
+        basket_product_map[basket_id] = ", ".join(readable_names.tolist())
+
+    # Step 10: Final results
+    results = pd.DataFrame({
+        'Basket Num': basket.index,
+        'Products Already in Basket': basket.index.map(basket_product_map),
+        'Recommended Product Num': predicted_products
+    })
+
+    results = results.merge(products, left_on='Recommended Product Num', right_on='product_num', how='left')
+
+    results = results[['Basket Num', 'Products Already in Basket', 'department', 'commodity']].head(10)
+
+    return render_template('basket_ml.html', results=results)
+
+
+
+# Churn Prediction Page
+@app.route('/churn')
+def churn():
+    # Load data
+    churn_query = """
+        SELECT hshd_num, SUM(spend) AS total_spend, MAX(year) AS last_year
+        FROM transactions
+        GROUP BY hshd_num
+        LIMIT 1000;  -- to keep it light
+    """
+    churn_result = db.session.execute(text(churn_query)).fetchall()
+    churn_data = pd.DataFrame(churn_result, columns=["hshd_num", "total_spend", "last_year"])
+
+    # Label churn: if last purchase year < 2020, assume churn
+    churn_data['churn'] = churn_data['last_year'].apply(lambda x: 1 if x < 2020 else 0)
+
+    # Prepare features
+    X = churn_data[['total_spend', 'last_year']]
+    y = churn_data['churn']
+
+    # Train Logistic Regression model
+    model = LogisticRegression()
+    model.fit(X, y)
+
+    # Predict churn probability
+    churn_data['churn_probability'] = model.predict_proba(X)[:, 1]
+
+    # Show top 10 customers at risk
+    churn_data = churn_data.sort_values(by="churn_probability", ascending=False).head(10)
+
+    return render_template('churn.html', churn_data=churn_data)
 
 
 if __name__ == '__main__':

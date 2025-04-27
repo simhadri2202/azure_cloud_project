@@ -139,10 +139,9 @@
 
 <!-- Navigation Bar -->
 <div class="nav">
-    <a href="/">Home</a>
-    <a href="/search">Search Data</a>
-    <a href="/upload">Upload Data</a>
-    <a href="/basket-analysis">Basket Analysis</a>
+    <a href="/search">Home</a>
+    <a href="/basket-ml">Basket ML Analysis</a>
+    <a href="/churn">Churn Prediction</a>
     <a href="/logout">Logout</a>
 </div>
 
@@ -203,7 +202,10 @@
             </tbody>
         </table>
     </div>
-
+    <div class="card">
+        <h2>Seasonal Spend Trends (Weekly)</h2>
+        <div id="seasonal_trends" style="height:400px;"></div>
+    </div>
     <!-- Spend Per Year Chart -->
     <div class="card">
         <h2>Spend Per Year (Bar Chart)</h2>
@@ -227,6 +229,29 @@
 
 <!-- Plotly Charts -->
 <script>
+    var seasonalTraces = [];
+
+    {% for year, data in seasonal_data.items() %}
+    seasonalTraces.push({
+        x: {{ data["weeks"]|tojson }},
+        y: {{ data["spends"]|tojson }},
+        mode: 'lines+markers',
+        name: '{{ year }}',
+        line: { width: 3 }
+    });
+    {% endfor %}
+
+    var seasonalLayout = {
+        margin: { t: 30 },
+        title: 'Weekly Spend Trends Over Years',
+        xaxis: { title: 'Week Number (1-52)' },
+        yaxis: { title: 'Total Spend ($)' },
+        plot_bgcolor: "#ffffff",
+        paper_bgcolor: "#ffffff",
+        legend: { orientation: "h", x: 0, y: 1.1 }
+    };
+
+    Plotly.newPlot('seasonal_trends', seasonalTraces, seasonalLayout);
     var engagementData = {
         x: {{ engagement_data|map(attribute='year')|list|tojson }},
         y: {{ engagement_data|map(attribute='total_spend')|list|tojson }},

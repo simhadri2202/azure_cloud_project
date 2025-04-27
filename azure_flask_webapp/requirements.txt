@@ -1,5 +1,8 @@
-flask
+Flask
+Flask-SQLAlchemy
 gunicorn
 pandas
-mlxtend
-numpy
+sqlalchemy
+psycopg2-binary
+python-dotenv
+plotly
